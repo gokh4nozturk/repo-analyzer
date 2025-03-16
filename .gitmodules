@@ -1,0 +1,3 @@
+[submodule "repo-analyzer-api"]
+	path = repo-analyzer-api
+	url = https://github.com/gokh4nozturk/repo-analyzer-api.git
