@@ -10,8 +10,8 @@ use std::path::PathBuf;
 )]
 pub struct Cli {
     /// Path to the repository to analyze
-    #[arg(short, long)]
-    pub repo_path: PathBuf,
+    #[arg(short, long, required_unless_present = "remote_url")]
+    pub repo_path: Option<PathBuf>,
 
     /// Output format (text, json, html)
     #[arg(short, long, default_value = "text")]
@@ -24,4 +24,12 @@ pub struct Cli {
     /// Number of top contributors to show
     #[arg(short, long, default_value = "5")]
     pub top_contributors: usize,
+
+    /// Clone and analyze a remote repository (provide URL)
+    #[arg(short = 'u', long)]
+    pub remote_url: Option<String>,
+
+    /// Depth of commit history to analyze (0 for all)
+    #[arg(long, default_value = "0")]
+    pub history_depth: usize,
 }

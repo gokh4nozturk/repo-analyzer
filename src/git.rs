@@ -1,7 +1,8 @@
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local, TimeZone};
-use git2::{Repository, Time};
+use git2::{build::RepoBuilder, FetchOptions, RemoteCallbacks, Repository, Time};
 use std::collections::HashMap;
+use std::io::Write;
 use std::path::Path;
 
 #[derive(Debug, Clone)]
@@ -13,7 +14,45 @@ pub struct Contributor {
     pub last_commit: String,
 }
 
-pub fn analyze_git_repo(repo_path: &Path) -> Result<(usize, Vec<Contributor>, String)> {
+pub fn clone_repository(url: &str, target_path: &Path) -> Result<Repository> {
+    let mut callbacks = RemoteCallbacks::new();
+    callbacks.transfer_progress(|stats| {
+        if stats.received_objects() == stats.total_objects() {
+            print!(
+                "\rReceiving objects: 100% ({}/{}), {:.2} KiB\r",
+                stats.received_objects(),
+                stats.total_objects(),
+                stats.received_bytes() as f64 / 1024.0
+            );
+        } else if stats.total_objects() > 0 {
+            print!(
+                "\rReceiving objects: {}% ({}/{}), {:.2} KiB\r",
+                (stats.received_objects() * 100) / stats.total_objects(),
+                stats.received_objects(),
+                stats.total_objects(),
+                stats.received_bytes() as f64 / 1024.0
+            );
+        }
+        std::io::stdout().flush().unwrap_or(());
+        true
+    });
+
+    let mut fetch_options = FetchOptions::new();
+    fetch_options.remote_callbacks(callbacks);
+
+    let repo = RepoBuilder::new()
+        .fetch_options(fetch_options)
+        .clone(url, target_path)
+        .context("Failed to clone repository")?;
+
+    println!("\nRepository cloned successfully");
+    Ok(repo)
+}
+
+pub fn analyze_git_repo(
+    repo_path: &Path,
+    depth: usize,
+) -> Result<(usize, Vec<Contributor>, String)> {
     let repo = Repository::open(repo_path).context("Failed to open git repository")?;
 
     let mut commit_count = 0;
@@ -37,8 +76,13 @@ pub fn analyze_git_repo(repo_path: &Path) -> Result<(usize, Vec<Contributor>, St
         .push(commit.id())
         .context("Failed to push commit to revwalk")?;
 
-    for oid in revwalk {
-        let oid = oid.context("Failed to get commit OID")?;
+    for (i, oid_result) in revwalk.enumerate() {
+        // If depth is set and we've reached it, break
+        if depth > 0 && i >= depth {
+            break;
+        }
+
+        let oid = oid_result.context("Failed to get commit OID")?;
         let commit = repo.find_commit(oid).context("Failed to find commit")?;
 
         commit_count += 1;

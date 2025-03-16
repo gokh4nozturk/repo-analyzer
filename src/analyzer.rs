@@ -16,9 +16,11 @@ pub struct RepositoryAnalysis {
     pub contributors: Vec<git::Contributor>,
     pub last_activity: String,
     pub file_extensions: HashMap<String, usize>,
+    pub avg_file_size: f64,
+    pub largest_files: Vec<(PathBuf, usize)>,
 }
 
-pub fn analyze_repository(repo_path: &Path) -> Result<RepositoryAnalysis> {
+pub fn analyze_repository(repo_path: &Path, history_depth: usize) -> Result<RepositoryAnalysis> {
     let repo_path = repo_path.to_path_buf();
 
     // Initialize analysis structure
@@ -31,13 +33,25 @@ pub fn analyze_repository(repo_path: &Path) -> Result<RepositoryAnalysis> {
         contributors: Vec::new(),
         last_activity: String::new(),
         file_extensions: HashMap::new(),
+        avg_file_size: 0.0,
+        largest_files: Vec::new(),
     };
 
     // Analyze files
     analyze_files(&repo_path, &mut analysis)?;
 
     // Analyze git history
-    analyze_git_history(&repo_path, &mut analysis)?;
+    analyze_git_history(&repo_path, &mut analysis, history_depth)?;
+
+    // Calculate average file size
+    if analysis.file_count > 0 {
+        let total_size: usize = analysis.largest_files.iter().map(|(_, size)| size).sum();
+        analysis.avg_file_size = total_size as f64 / analysis.file_count as f64;
+    }
+
+    // Keep only top 10 largest files
+    analysis.largest_files.sort_by(|(_, a), (_, b)| b.cmp(a));
+    analysis.largest_files.truncate(10);
 
     Ok(analysis)
 }
@@ -49,6 +63,9 @@ fn analyze_files(repo_path: &Path, analysis: &mut RepositoryAnalysis) -> Result<
         Regex::new(r"\.git/").unwrap(),
         Regex::new(r"node_modules/").unwrap(),
         Regex::new(r"target/").unwrap(),
+        Regex::new(r"\.DS_Store").unwrap(),
+        Regex::new(r"\.idea/").unwrap(),
+        Regex::new(r"\.vscode/").unwrap(),
     ];
 
     for entry in WalkDir::new(repo_path)
@@ -58,6 +75,14 @@ fn analyze_files(repo_path: &Path, analysis: &mut RepositoryAnalysis) -> Result<
         .filter(|e| e.file_type().is_file())
     {
         analysis.file_count += 1;
+
+        // Get file size
+        if let Ok(metadata) = entry.metadata() {
+            let file_size = metadata.len() as usize;
+            analysis
+                .largest_files
+                .push((entry.path().to_path_buf(), file_size));
+        }
 
         // Get file extension
         if let Some(extension) = entry.path().extension() {
@@ -70,6 +95,8 @@ fn analyze_files(repo_path: &Path, analysis: &mut RepositoryAnalysis) -> Result<
                     "rs" => "Rust",
                     "js" => "JavaScript",
                     "ts" => "TypeScript",
+                    "jsx" => "React",
+                    "tsx" => "React",
                     "py" => "Python",
                     "java" => "Java",
                     "c" | "h" => "C",
@@ -79,10 +106,22 @@ fn analyze_files(repo_path: &Path, analysis: &mut RepositoryAnalysis) -> Result<
                     "php" => "PHP",
                     "html" => "HTML",
                     "css" => "CSS",
+                    "scss" | "sass" => "SASS",
                     "md" => "Markdown",
                     "json" => "JSON",
                     "yml" | "yaml" => "YAML",
                     "toml" => "TOML",
+                    "sh" | "bash" => "Shell",
+                    "sql" => "SQL",
+                    "swift" => "Swift",
+                    "kt" | "kts" => "Kotlin",
+                    "dart" => "Dart",
+                    "ex" | "exs" => "Elixir",
+                    "hs" => "Haskell",
+                    "clj" => "Clojure",
+                    "fs" => "F#",
+                    "vue" => "Vue",
+                    "svelte" => "Svelte",
                     _ => "Other",
                 };
 
@@ -102,11 +141,16 @@ fn analyze_files(repo_path: &Path, analysis: &mut RepositoryAnalysis) -> Result<
     Ok(())
 }
 
-fn analyze_git_history(repo_path: &Path, analysis: &mut RepositoryAnalysis) -> Result<()> {
+fn analyze_git_history(
+    repo_path: &Path,
+    analysis: &mut RepositoryAnalysis,
+    history_depth: usize,
+) -> Result<()> {
     println!("Analyzing git history...");
 
     let (commit_count, contributors, last_activity) =
-        git::analyze_git_repo(repo_path).context("Failed to analyze git repository")?;
+        git::analyze_git_repo(repo_path, history_depth)
+            .context("Failed to analyze git repository")?;
 
     analysis.commit_count = commit_count;
     analysis.contributors = contributors;

@@ -17,6 +17,8 @@ struct JsonReport {
     contributors: Vec<ContributorInfo>,
     last_activity: String,
     file_extensions: Vec<ExtensionStat>,
+    avg_file_size: f64,
+    largest_files: Vec<LargeFileInfo>,
 }
 
 #[derive(Serialize)]
@@ -42,19 +44,30 @@ struct ContributorInfo {
     last_commit: String,
 }
 
-pub fn generate_report(analysis: &RepositoryAnalysis, format: String) -> Result<()> {
+#[derive(Serialize)]
+struct LargeFileInfo {
+    path: String,
+    size_bytes: usize,
+    size_human: String,
+}
+
+pub fn generate_report(
+    analysis: &RepositoryAnalysis,
+    format: String,
+    top_contributors: usize,
+) -> Result<()> {
     match format.to_lowercase().as_str() {
-        "text" => generate_text_report(analysis),
-        "json" => generate_json_report(analysis),
-        "html" => generate_html_report(analysis),
+        "text" => generate_text_report(analysis, top_contributors),
+        "json" => generate_json_report(analysis, top_contributors),
+        "html" => generate_html_report(analysis, top_contributors),
         _ => {
             println!("Unsupported format: {}. Defaulting to text.", format);
-            generate_text_report(analysis)
+            generate_text_report(analysis, top_contributors)
         }
     }
 }
 
-fn generate_text_report(analysis: &RepositoryAnalysis) -> Result<()> {
+fn generate_text_report(analysis: &RepositoryAnalysis, top_contributors: usize) -> Result<()> {
     println!("\n{}", "Repository Analysis Report".yellow().bold());
     println!("{}", "=========================".yellow());
 
@@ -64,22 +77,47 @@ fn generate_text_report(analysis: &RepositoryAnalysis) -> Result<()> {
     println!("Total Lines of Code: {}", analysis.total_lines);
     println!("Total Commits: {}", analysis.commit_count);
     println!("Last Activity: {}", analysis.last_activity);
+    println!(
+        "Average File Size: {:.2} KB",
+        analysis.avg_file_size / 1024.0
+    );
 
     println!("\n{}", "Language Statistics:".cyan().bold());
     let total_files = analysis.file_count as f64;
-    for (language, count) in &analysis.language_stats {
+    let mut languages: Vec<(&String, &usize)> = analysis.language_stats.iter().collect();
+    languages.sort_by(|(_, a), (_, b)| b.cmp(a));
+
+    for (language, count) in languages {
         let percentage = (*count as f64 / total_files) * 100.0;
         println!("{}: {} files ({:.1}%)", language, count, percentage);
     }
 
     println!("\n{}", "File Extensions:".cyan().bold());
-    for (ext, count) in &analysis.file_extensions {
+    let mut extensions: Vec<(&String, &usize)> = analysis.file_extensions.iter().collect();
+    extensions.sort_by(|(_, a), (_, b)| b.cmp(a));
+
+    for (ext, count) in extensions {
         let percentage = (*count as f64 / total_files) * 100.0;
         println!(".{}: {} files ({:.1}%)", ext, count, percentage);
     }
 
+    println!("\n{}", "Largest Files:".cyan().bold());
+    for (i, (path, size)) in analysis.largest_files.iter().enumerate().take(10) {
+        println!(
+            "{}. {} - {:.2} KB",
+            i + 1,
+            path.display(),
+            *size as f64 / 1024.0
+        );
+    }
+
     println!("\n{}", "Top Contributors:".cyan().bold());
-    for (i, contributor) in analysis.contributors.iter().enumerate().take(5) {
+    for (i, contributor) in analysis
+        .contributors
+        .iter()
+        .enumerate()
+        .take(top_contributors)
+    {
         println!(
             "{}. {} <{}> - {} commits (first: {}, last: {})",
             i + 1,
@@ -94,7 +132,7 @@ fn generate_text_report(analysis: &RepositoryAnalysis) -> Result<()> {
     Ok(())
 }
 
-fn generate_json_report(analysis: &RepositoryAnalysis) -> Result<()> {
+fn generate_json_report(analysis: &RepositoryAnalysis, top_contributors: usize) -> Result<()> {
     let total_files = analysis.file_count as f64;
 
     let language_stats: Vec<LanguageStat> = analysis
@@ -126,12 +164,23 @@ fn generate_json_report(analysis: &RepositoryAnalysis) -> Result<()> {
     let contributors: Vec<ContributorInfo> = analysis
         .contributors
         .iter()
+        .take(top_contributors)
         .map(|c| ContributorInfo {
             name: c.name.clone(),
             email: c.email.clone(),
             commit_count: c.commit_count,
             first_commit: c.first_commit.clone(),
             last_commit: c.last_commit.clone(),
+        })
+        .collect();
+
+    let largest_files: Vec<LargeFileInfo> = analysis
+        .largest_files
+        .iter()
+        .map(|(path, size)| LargeFileInfo {
+            path: path.display().to_string(),
+            size_bytes: *size,
+            size_human: format!("{:.2} KB", *size as f64 / 1024.0),
         })
         .collect();
 
@@ -144,6 +193,8 @@ fn generate_json_report(analysis: &RepositoryAnalysis) -> Result<()> {
         contributors,
         last_activity: analysis.last_activity.clone(),
         file_extensions,
+        avg_file_size: analysis.avg_file_size,
+        largest_files,
     };
 
     let json =
@@ -159,7 +210,7 @@ fn generate_json_report(analysis: &RepositoryAnalysis) -> Result<()> {
     Ok(())
 }
 
-fn generate_html_report(analysis: &RepositoryAnalysis) -> Result<()> {
+fn generate_html_report(analysis: &RepositoryAnalysis, top_contributors: usize) -> Result<()> {
     let total_files = analysis.file_count as f64;
 
     let mut html = String::new();
@@ -214,6 +265,9 @@ fn generate_html_report(analysis: &RepositoryAnalysis) -> Result<()> {
     html.push_str("                <tr><th>Last Activity</th><td>");
     html.push_str(&analysis.last_activity);
     html.push_str("</td></tr>\n");
+    html.push_str("                <tr><th>Average File Size</th><td>");
+    html.push_str(&format!("{:.2} KB", analysis.avg_file_size / 1024.0));
+    html.push_str("</td></tr>\n");
     html.push_str("            </table>\n");
     html.push_str("        </div>\n");
 
@@ -223,7 +277,10 @@ fn generate_html_report(analysis: &RepositoryAnalysis) -> Result<()> {
     html.push_str("            <table>\n");
     html.push_str("                <tr><th>Language</th><th>Files</th><th>Percentage</th><th>Distribution</th></tr>\n");
 
-    for (language, count) in &analysis.language_stats {
+    let mut languages: Vec<(&String, &usize)> = analysis.language_stats.iter().collect();
+    languages.sort_by(|(_, a), (_, b)| b.cmp(a));
+
+    for (language, count) in languages {
         let percentage = (*count as f64 / total_files) * 100.0;
         html.push_str("                <tr>\n");
         html.push_str("                    <td>");
@@ -254,7 +311,10 @@ fn generate_html_report(analysis: &RepositoryAnalysis) -> Result<()> {
     html.push_str("            <table>\n");
     html.push_str("                <tr><th>Extension</th><th>Files</th><th>Percentage</th></tr>\n");
 
-    for (ext, count) in &analysis.file_extensions {
+    let mut extensions: Vec<(&String, &usize)> = analysis.file_extensions.iter().collect();
+    extensions.sort_by(|(_, a), (_, b)| b.cmp(a));
+
+    for (ext, count) in extensions {
         let percentage = (*count as f64 / total_files) * 100.0;
         html.push_str("                <tr>\n");
         html.push_str("                    <td>.");
@@ -272,13 +332,36 @@ fn generate_html_report(analysis: &RepositoryAnalysis) -> Result<()> {
     html.push_str("            </table>\n");
     html.push_str("        </div>\n");
 
+    // Largest Files
+    html.push_str("        <div class=\"section\">\n");
+    html.push_str("            <h2>Largest Files</h2>\n");
+    html.push_str("            <table>\n");
+    html.push_str("                <tr><th>Rank</th><th>Path</th><th>Size</th></tr>\n");
+
+    for (i, (path, size)) in analysis.largest_files.iter().enumerate().take(10) {
+        html.push_str("                <tr>\n");
+        html.push_str("                    <td>");
+        html.push_str(&(i + 1).to_string());
+        html.push_str("</td>\n");
+        html.push_str("                    <td>");
+        html.push_str(&path.display().to_string());
+        html.push_str("</td>\n");
+        html.push_str("                    <td>");
+        html.push_str(&format!("{:.2} KB", *size as f64 / 1024.0));
+        html.push_str("</td>\n");
+        html.push_str("                </tr>\n");
+    }
+
+    html.push_str("            </table>\n");
+    html.push_str("        </div>\n");
+
     // Contributors
     html.push_str("        <div class=\"section\">\n");
     html.push_str("            <h2>Top Contributors</h2>\n");
     html.push_str("            <table>\n");
     html.push_str("                <tr><th>Name</th><th>Email</th><th>Commits</th><th>First Commit</th><th>Last Commit</th></tr>\n");
 
-    for contributor in analysis.contributors.iter().take(5) {
+    for contributor in analysis.contributors.iter().take(top_contributors) {
         html.push_str("                <tr>\n");
         html.push_str("                    <td>");
         html.push_str(&contributor.name);
