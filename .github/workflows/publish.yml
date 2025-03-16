@@ -3,7 +3,7 @@ name: Publish to crates.io
 on:
   push:
     tags:
-      - "v*" # Etiket v ile başlıyorsa tetiklenecek (örn: v0.1.0)
+      - "v*" # Triggered when a tag starting with v is pushed (e.g. v0.1.0)
 
 jobs:
   publish:
