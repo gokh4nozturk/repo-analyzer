@@ -1,6 +1,6 @@
 [package]
 name = "repo-analyzer"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2021"
 authors = ["Gokhan Ozturk <gokhaanozturk@gmail.com>"]
 description = "A tool to analyze GitHub repositories and generate detailed reports with S3 upload capability"
