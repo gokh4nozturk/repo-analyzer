@@ -1,72 +1,88 @@
-# Crates.io'ya Yükleme Talimatları
+# Crates.io Publishing
 
-Bu belge, repo-analyzer projesini crates.io'ya yükleme adımlarını açıklar.
+This document describes the steps to publish the repo-analyzer project to crates.io.
 
-## Ön Hazırlık
+## Automatic Publishing with GitHub Actions
 
-1. Cargo.toml dosyasındaki bilgileri kendi bilgilerinizle güncelleyin:
-   - `authors` alanını kendi adınız ve e-posta adresinizle değiştirin
-   - `repository` alanını kendi GitHub repo URL'nizle değiştirin
-   - Diğer meta verileri gerektiği gibi düzenleyin
+This project has a configuration for automatic publishing to crates.io using GitHub Actions. To publish a new version:
 
-2. LICENSE dosyasındaki telif hakkı bilgisini kendi adınızla güncelleyin.
+1. Update the `version` in the `Cargo.toml` file (e.g. "0.1.0" -> "0.1.1")
+2. Commit the changes
+3. Create a new git tag with the new version and push it:
+   ```bash
+   git tag v0.1.1
+   git push origin v0.1.1
+   ```
 
-3. README.md dosyasındaki tüm "yourusername" referanslarını kendi GitHub kullanıcı adınızla değiştirin.
+GitHub Actions will automatically trigger and publish the new version to crates.io.
 
-## crates.io Hesabı
+## GitHub Secrets
 
-1. Eğer henüz bir crates.io hesabınız yoksa, https://crates.io adresinden kaydolun.
+To allow GitHub Actions to publish to crates.io, you need to create a secret in your GitHub repository:
 
-2. Hesabınızı oluşturduktan sonra, API token'ınızı alın:
-   - Crates.io'da oturum açın
-   - Sağ üst köşedeki kullanıcı adınıza tıklayın
-   - "Account Settings" seçeneğini seçin
-   - "API Tokens" bölümünde yeni bir token oluşturun
+1. Go to the repo page on GitHub
+2. Click on "Settings" > "Secrets and variables" > "Actions"
+3. Click on "New repository secret"
+4. Name it `CARGO_REGISTRY_TOKEN`
+5. Set the value to your crates.io API token
+6. Click "Add secret"
 
-3. Cargo'ya API token'ınızı kaydedin:
+## Manual Publishing
+
+If you don't want to use GitHub Actions, you can manually publish by following these steps:
+
+### Preparations
+
+1. Update the `authors`, `repository` and other metadata in the `Cargo.toml` file with your own information:
+   - `authors` to your name and email address
+   - `repository` to your GitHub repo URL
+   - Update other metadata as needed
+
+2. Update the copyright information in the `LICENSE` file with your own information.
+
+3. Replace all "yourusername" references in the `README.md` file with your GitHub username.
+
+### crates.io Account
+
+1. If you don't have a crates.io account yet, register at https://crates.io.
+
+2. After creating your account, create a new API token:
+   - Log in to crates.io
+   - Click on your username in the top right corner
+   - Select "Account Settings"
+   - Create a new token in the "API Tokens" section
+
+3. Save your API token to Cargo:
    ```bash
    cargo login YOUR_API_TOKEN
    ```
 
-## Paketi Hazırlama ve Yükleme
+### Preparing and Publishing the Package
 
-1. Paketinizi test edin:
+1. Test your package:
    ```bash
-   cargo package --allow-dirty
+   cargo package
    ```
 
-2. Paketinizi crates.io'ya yükleyin:
-   ```bash
-   cargo publish --allow-dirty
-   ```
-
-   Not: `--allow-dirty` bayrağı, git'e commit edilmemiş değişiklikleri içeren dosyaları da pakete dahil eder. Gerçek bir yayında, tüm değişiklikleri commit etmeniz ve bu bayrağı kullanmamanız önerilir.
-
-## Yükleme Sonrası
-
-1. Paketinizin crates.io'da görünüp görünmediğini kontrol edin:
-   ```
-   https://crates.io/crates/repo-analyzer
-   ```
-
-2. Paketinizi cargo ile kurmayı deneyin:
-   ```bash
-   cargo install repo-analyzer
-   ```
-
-## Yeni Sürüm Yayınlama
-
-Yeni bir sürüm yayınlamak istediğinizde:
-
-1. Cargo.toml dosyasındaki `version` numarasını artırın (örneğin, "0.1.0" -> "0.1.1")
-2. Değişiklikleri commit edin
-3. Yeni sürümü yayınlayın:
+2. Publish your package:
    ```bash
    cargo publish
    ```
 
-## Önemli Notlar
+### After Publishing
 
-- Bir paketi crates.io'ya yükledikten sonra, o sürümü asla silemezsiniz. Yeni sürümler yayınlayabilirsiniz, ancak eski sürümler her zaman erişilebilir kalır.
-- Paket adları benzersiz olmalıdır. Eğer "repo-analyzer" adı zaten alınmışsa, farklı bir ad seçmeniz gerekecektir.
-- Paketinizin bağımlılıklarının da crates.io'da mevcut olması gerekir. 
+1. Check if your package is visible on crates.io:
+   ```
+   https://crates.io/crates/repo-analyzer
+   ```
+
+2. Try installing your package with cargo:
+   ```bash
+   cargo install repo-analyzer
+   ```
+
+## Important Notes
+
+- Once a package is published to crates.io, you cannot delete it. You can publish new versions, but old versions will always be accessible.
+- Package names must be unique. If "repo-analyzer" is already taken, you will need to choose a different name.
+- Your package's dependencies must also be published to crates.io.

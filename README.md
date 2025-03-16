@@ -30,7 +30,7 @@ cargo install repo-analyzer
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/repo-analyzer.git
+git clone https://github.com/gokh4nozturk/repo-analyzer.git
 cd repo-analyzer
 
 # Configure AWS credentials
@@ -136,4 +136,18 @@ MIT
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. 
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Publishing
+
+This project uses GitHub Actions for automated publishing to crates.io. To publish a new version:
+
+1. Update the version number in `Cargo.toml`
+2. Commit your changes
+3. Create and push a new tag with the version number:
+   ```bash
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+
+The GitHub Actions workflow will automatically build, test, and publish the new version to crates.io. 
