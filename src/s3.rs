@@ -123,13 +123,30 @@ async fn upload_via_api(
     key: &str,
     region: &str,
 ) -> Result<String> {
-    // The URL of your API endpoint that handles S3 uploads
-    let api_url = "https://api.repo-analyzer.com/upload";
+    // Get API URL from environment variable or config
+    let api_url = std::env::var("REPO_ANALYZER_API_URL").unwrap_or_else(|_| {
+        // Try to get from config if environment variable is not set
+        match crate::config::Config::load() {
+            Ok(config) => config
+                .api_url
+                .unwrap_or_else(|| "https://api.repo-analyzer.com/upload".to_string()),
+            Err(_) => "https://api.repo-analyzer.com/upload".to_string(),
+        }
+    });
 
     println!("Uploading via central API: {}", api_url);
 
     // Read file content
     let file_content = fs::read(file_path)?;
+
+    // Get API key from environment or config
+    let api_key = std::env::var("REPO_ANALYZER_API_KEY").unwrap_or_else(|_| {
+        // Try to get from config if environment variable is not set
+        match crate::config::Config::load() {
+            Ok(config) => config.api_key.unwrap_or_else(|| "".to_string()),
+            Err(_) => "".to_string(),
+        }
+    });
 
     // Create a multipart form with the file and metadata
     let form = reqwest::multipart::Form::new()
@@ -144,7 +161,14 @@ async fn upload_via_api(
 
     // Send the request to the API
     let client = reqwest::Client::new();
-    let response = client.post(api_url).multipart(form).send().await?;
+    let mut request = client.post(api_url).multipart(form);
+
+    // Add API key header if available
+    if !api_key.is_empty() {
+        request = request.header("x-api-key", api_key);
+    }
+
+    let response = request.send().await?;
 
     // Check if the request was successful
     if response.status().is_success() {

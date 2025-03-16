@@ -7,6 +7,10 @@ use std::path::Path;
 #[derive(Debug, Deserialize)]
 pub struct Config {
     pub aws: AwsConfig,
+    #[serde(default)]
+    pub api_key: Option<String>,
+    #[serde(default)]
+    pub api_url: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -42,6 +46,8 @@ impl Config {
                 bucket: std::env::var("AWS_S3_BUCKET")
                     .unwrap_or_else(|_| "repo-analyzer".to_string()),
             },
+            api_key: std::env::var("REPO_ANALYZER_API_KEY").ok(),
+            api_url: std::env::var("REPO_ANALYZER_API_URL").ok(),
         })
     }
 }

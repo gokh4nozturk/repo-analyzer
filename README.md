@@ -74,6 +74,19 @@ The tool uses a two-step approach for uploading reports:
 
 This approach ensures that reports can be uploaded to our central repository even if you don't have AWS credentials configured locally.
 
+### API Service
+
+The repository includes an API service in the `api/` directory that handles S3 uploads. This service can be deployed to any Node.js hosting platform and used as the central upload point for all repo-analyzer clients.
+
+To set up the API service:
+
+1. Navigate to the `api/` directory
+2. Copy `.env.example` to `.env` and configure your AWS credentials
+3. Install dependencies: `npm install`
+4. Start the service: `npm start`
+
+For more details, see the [API README](api/README.md).
+
 ### Configuring AWS Credentials (Optional)
 
 If you want to use your own S3 bucket, you can configure AWS credentials in one of the following ways:

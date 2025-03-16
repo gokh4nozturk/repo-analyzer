@@ -2,7 +2,9 @@
   "aws": {
     "access_key": "YOUR_ACCESS_KEY",
     "secret_key": "YOUR_SECRET_KEY",
-    "region": "us-east-1",
+    "region": "eu-central-1",
     "bucket": "repo-analyzer"
-  }
+  },
+  "api_key": "YOUR_API_KEY",
+  "api_url": "https://api.repo-analyzer.com/upload"
 } 
