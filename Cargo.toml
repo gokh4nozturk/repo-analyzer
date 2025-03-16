@@ -2,8 +2,20 @@
 name = "repo-analyzer"
 version = "0.1.0"
 edition = "2021"
-authors = ["Your Name"]
-description = "A tool to analyze GitHub repositories"
+authors = ["Gokhan Ozturk <gokhaanozturk@gmail.com>"]
+description = "A tool to analyze GitHub repositories and generate detailed reports with S3 upload capability"
+license = "MIT"
+repository = "https://github.com/gokh4nozturk/repo-analyzer"
+readme = "README.md"
+keywords = ["git", "analysis", "repository", "code", "metrics"]
+categories = ["command-line-utilities", "development-tools"]
+exclude = [
+    "config.json",
+    "report.html",
+    "report.json",
+    "repo_analysis.html",
+    "repo_analysis.json",
+]
 
 [dependencies]
 clap = { version = "4.4", features = ["derive"] }
