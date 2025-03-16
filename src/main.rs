@@ -40,35 +40,47 @@ async fn main() -> Result<()> {
     let report_files =
         report::generate_report(&analysis, cli.output_format.clone(), cli.top_contributors)?;
 
-    // Always upload reports to S3
+    // Save report files locally
+    let mut local_report_paths = Vec::new();
     for (format, file_path) in report_files.iter() {
-        // Get repository name from path
-        let repo_name = if repo_path.as_os_str() == "." {
-            // If analyzing current directory, use the directory name
-            std::env::current_dir()
-                .ok()
-                .and_then(|path| {
-                    path.file_name()
-                        .map(|name| name.to_string_lossy().to_string())
-                })
-                .unwrap_or_else(|| "repo-analyzer".to_string())
-        } else if let Some(name) = repo_path.file_name() {
-            name.to_string_lossy().to_string()
-        } else {
-            "unknown-repo".to_string()
-        };
-
-        let key = format!(
-            "reports/{}-{}.{}",
-            repo_name,
-            chrono::Local::now().format("%Y%m%d%H%M%S"),
-            format
+        println!(
+            "Report saved locally at: {}",
+            file_path.display().to_string().cyan()
         );
+        local_report_paths.push(file_path.clone());
+    }
 
-        println!("Uploading {} report to S3...", format);
-        match s3::upload_to_s3(file_path, &config.aws.bucket, &key, &config.aws.region).await {
-            Ok(url) => println!("Report available at: {}", url.cyan()),
-            Err(e) => eprintln!("Failed to upload report to S3: {}", e),
+    // Upload reports to S3 if requested
+    if cli.upload_to_s3 {
+        for (format, file_path) in report_files.iter() {
+            // Get repository name from path
+            let repo_name = if repo_path.as_os_str() == "." {
+                // If analyzing current directory, use the directory name
+                std::env::current_dir()
+                    .ok()
+                    .and_then(|path| {
+                        path.file_name()
+                            .map(|name| name.to_string_lossy().to_string())
+                    })
+                    .unwrap_or_else(|| "repo-analyzer".to_string())
+            } else if let Some(name) = repo_path.file_name() {
+                name.to_string_lossy().to_string()
+            } else {
+                "unknown-repo".to_string()
+            };
+
+            let key = format!(
+                "reports/{}-{}.{}",
+                repo_name,
+                chrono::Local::now().format("%Y%m%d%H%M%S"),
+                format
+            );
+
+            println!("Uploading {} report to S3...", format);
+            match s3::upload_to_s3(file_path, &config.aws.bucket, &key, &config.aws.region).await {
+                Ok(url) => println!("Report available at: {}", url.cyan()),
+                Err(e) => eprintln!("Failed to upload report to S3: {}", e),
+            }
         }
     }
 

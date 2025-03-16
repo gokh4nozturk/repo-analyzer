@@ -60,6 +60,47 @@ The tool requires AWS credentials to upload reports to S3. Create a `config.json
 
 Replace the placeholder values with your actual AWS credentials and ensure the bucket exists in the specified region.
 
+## S3 Upload Feature
+
+The tool can optionally upload generated reports to an S3 bucket for easy sharing and access. This feature is disabled by default and can be enabled with the `--upload-to-s3` flag.
+
+### How Report Uploads Work
+
+The tool uses a two-step approach for uploading reports:
+
+1. **Direct S3 Upload**: First, it attempts to upload directly to S3 using locally configured AWS credentials.
+
+2. **Central API Fallback**: If direct upload fails (e.g., due to missing or invalid credentials), the tool automatically falls back to uploading via our central API service, which securely handles the S3 upload process.
+
+This approach ensures that reports can be uploaded to our central repository even if you don't have AWS credentials configured locally.
+
+### Configuring AWS Credentials (Optional)
+
+If you want to use your own S3 bucket, you can configure AWS credentials in one of the following ways:
+
+1. **Environment Variables**:
+   ```
+   export AWS_ACCESS_KEY_ID=your_access_key
+   export AWS_SECRET_ACCESS_KEY=your_secret_key
+   export AWS_REGION=your_region
+   export AWS_S3_BUCKET=your_bucket_name
+   ```
+
+2. **Config File**:
+   Create a `config.json` file in the same directory as the executable with the following structure:
+   ```json
+   {
+     "aws": {
+       "access_key": "your_access_key",
+       "secret_key": "your_secret_key",
+       "region": "your_region",
+       "bucket": "your_bucket_name"
+     }
+   }
+   ```
+
+If you don't configure AWS credentials, the tool will automatically use our central API service to upload reports to our shared repository.
+
 ## Usage
 
 ```bash

@@ -32,4 +32,8 @@ pub struct Cli {
     /// Depth of commit history to analyze (0 for all)
     #[arg(long, default_value = "0")]
     pub history_depth: usize,
+
+    /// Upload reports to S3 (requires AWS credentials)
+    #[arg(long, default_value = "false")]
+    pub upload_to_s3: bool,
 }

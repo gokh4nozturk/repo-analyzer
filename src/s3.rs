@@ -1,5 +1,6 @@
 use anyhow::Result;
 use aws_sdk_s3::{primitives::ByteStream, Client};
+use std::fs;
 use std::path::Path;
 
 /// Uploads a file to an S3 bucket and returns the public URL
@@ -15,13 +16,52 @@ pub async fn upload_to_s3(
     println!("Key: {}", key);
     println!("Region: {}", region);
 
-    // Set AWS credentials as environment variables from config
-    let config = crate::config::Config::load()?;
-    std::env::set_var("AWS_ACCESS_KEY_ID", &config.aws.access_key);
-    std::env::set_var("AWS_SECRET_ACCESS_KEY", &config.aws.secret_key);
-    std::env::set_var("AWS_REGION", region);
+    // First try direct S3 upload with local credentials
+    match direct_s3_upload(file_path, bucket_name, key, region).await {
+        Ok(url) => {
+            println!("Direct S3 upload successful");
+            return Ok(url);
+        }
+        Err(e) => {
+            println!("Direct S3 upload failed: {}", e);
+            println!("Trying upload via central API...");
+            // Fall back to API-based upload
+            return upload_via_api(file_path, bucket_name, key, region).await;
+        }
+    }
+}
 
-    println!("AWS credentials set from config");
+/// Attempts to upload directly to S3 using local credentials
+async fn direct_s3_upload(
+    file_path: &Path,
+    bucket_name: &str,
+    key: &str,
+    region: &str,
+) -> Result<String> {
+    // Check if AWS credentials are already set in environment variables
+    let access_key_set = std::env::var("AWS_ACCESS_KEY_ID").is_ok();
+    let secret_key_set = std::env::var("AWS_SECRET_ACCESS_KEY").is_ok();
+
+    // Only set from config if not already set in environment
+    if !access_key_set || !secret_key_set {
+        // Set AWS credentials as environment variables from config
+        let config = crate::config::Config::load()?;
+
+        if !access_key_set {
+            std::env::set_var("AWS_ACCESS_KEY_ID", &config.aws.access_key);
+        }
+
+        if !secret_key_set {
+            std::env::set_var("AWS_SECRET_ACCESS_KEY", &config.aws.secret_key);
+        }
+
+        println!("AWS credentials set from config");
+    } else {
+        println!("Using AWS credentials from environment variables");
+    }
+
+    // Always set region from parameter
+    std::env::set_var("AWS_REGION", region);
 
     // Load AWS configuration
     let aws_config = aws_config::from_env()
@@ -74,4 +114,52 @@ pub async fn upload_to_s3(
 
     println!("Generated URL: {}", url);
     Ok(url)
+}
+
+/// Uploads the file via a central API service that handles S3 uploads with proper credentials
+async fn upload_via_api(
+    file_path: &Path,
+    bucket_name: &str,
+    key: &str,
+    region: &str,
+) -> Result<String> {
+    // The URL of your API endpoint that handles S3 uploads
+    let api_url = "https://api.repo-analyzer.com/upload";
+
+    println!("Uploading via central API: {}", api_url);
+
+    // Read file content
+    let file_content = fs::read(file_path)?;
+
+    // Create a multipart form with the file and metadata
+    let form = reqwest::multipart::Form::new()
+        .text("bucket", bucket_name.to_string())
+        .text("key", key.to_string())
+        .text("region", region.to_string())
+        .part(
+            "file",
+            reqwest::multipart::Part::bytes(file_content)
+                .file_name(file_path.file_name().unwrap().to_string_lossy().to_string()),
+        );
+
+    // Send the request to the API
+    let client = reqwest::Client::new();
+    let response = client.post(api_url).multipart(form).send().await?;
+
+    // Check if the request was successful
+    if response.status().is_success() {
+        // Parse the response to get the URL
+        let response_json: serde_json::Value = response.json().await?;
+        let url = response_json["url"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("Invalid response from API: missing URL"))?
+            .to_string();
+
+        println!("API upload successful");
+        println!("Generated URL: {}", url);
+        Ok(url)
+    } else {
+        let error_text = response.text().await?;
+        Err(anyhow::anyhow!("API upload failed: {}", error_text))
+    }
 }
