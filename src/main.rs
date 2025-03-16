@@ -28,7 +28,9 @@ async fn main() -> Result<()> {
     } else if let Some(path) = &cli.repo_path {
         path.clone()
     } else {
-        anyhow::bail!("Either --repo-path or --remote-url must be provided");
+        return Err(anyhow::anyhow!(
+            "Either --repo-path or --remote-url must be provided"
+        ));
     };
 
     println!(
