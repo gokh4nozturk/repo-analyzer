@@ -1,8 +1,10 @@
 use anyhow::{Context, Result};
 use colored::*;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
+use std::path::PathBuf;
 
 use crate::analyzer::RepositoryAnalysis;
 
@@ -114,16 +116,29 @@ pub fn generate_report(
     analysis: &RepositoryAnalysis,
     format: String,
     top_contributors: usize,
-) -> Result<()> {
+) -> Result<HashMap<String, PathBuf>> {
+    let mut report_files = HashMap::new();
+
     match format.to_lowercase().as_str() {
-        "text" => generate_text_report(analysis, top_contributors),
-        "json" => generate_json_report(analysis, top_contributors),
-        "html" => generate_html_report(analysis, top_contributors),
+        "text" => {
+            generate_text_report(analysis, top_contributors)?;
+            // Text reports are printed to console, not saved to file
+        }
+        "json" => {
+            let file_path = generate_json_report(analysis, top_contributors)?;
+            report_files.insert("json".to_string(), file_path);
+        }
+        "html" => {
+            let file_path = generate_html_report(analysis, top_contributors)?;
+            report_files.insert("html".to_string(), file_path);
+        }
         _ => {
-            println!("Unsupported format: {}. Defaulting to text.", format);
-            generate_text_report(analysis, top_contributors)
+            println!("Unsupported format: {}, defaulting to text", format);
+            generate_text_report(analysis, top_contributors)?;
         }
     }
+
+    Ok(report_files)
 }
 
 fn generate_text_report(analysis: &RepositoryAnalysis, top_contributors: usize) -> Result<()> {
@@ -218,7 +233,7 @@ fn generate_text_report(analysis: &RepositoryAnalysis, top_contributors: usize) 
     Ok(())
 }
 
-fn generate_json_report(analysis: &RepositoryAnalysis, top_contributors: usize) -> Result<()> {
+fn generate_json_report(analysis: &RepositoryAnalysis, top_contributors: usize) -> Result<PathBuf> {
     println!("Generating JSON report...");
 
     // Convert language stats to serializable format
@@ -391,15 +406,15 @@ fn generate_json_report(analysis: &RepositoryAnalysis, top_contributors: usize) 
     };
 
     // Write to file
-    let output_file = "repo_analysis.json";
-    let file = File::create(output_file).context("Failed to create JSON report file")?;
+    let file_path = PathBuf::from("report.json");
+    let file = File::create(&file_path).context("Failed to create JSON report file")?;
     serde_json::to_writer_pretty(file, &report).context("Failed to write JSON report")?;
 
-    println!("JSON report saved to {}", output_file);
-    Ok(())
+    println!("JSON report saved to {}", file_path.display());
+    Ok(file_path)
 }
 
-fn generate_html_report(analysis: &RepositoryAnalysis, top_contributors: usize) -> Result<()> {
+fn generate_html_report(analysis: &RepositoryAnalysis, top_contributors: usize) -> Result<PathBuf> {
     println!("Generating HTML report...");
 
     let mut html = String::new();
@@ -620,11 +635,11 @@ fn generate_html_report(analysis: &RepositoryAnalysis, top_contributors: usize) 
     html.push_str("</body>\n</html>");
 
     // Write to file
-    let output_file = "repo_analysis.html";
-    let mut file = File::create(output_file).context("Failed to create HTML report file")?;
+    let file_path = PathBuf::from("report.html");
+    let mut file = File::create(&file_path).context("Failed to create HTML report file")?;
     file.write_all(html.as_bytes())
         .context("Failed to write HTML report")?;
 
-    println!("HTML report saved to {}", output_file);
-    Ok(())
+    println!("HTML report saved to {}", file_path.display());
+    Ok(file_path)
 }

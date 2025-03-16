@@ -9,6 +9,7 @@ A command-line tool written in Rust to analyze GitHub repositories and generate 
 - Track commit history and contributor statistics
 - Generate reports in multiple formats (text, JSON, HTML)
 - Identify file extensions and their distribution
+- Automatically upload reports to cloud storage for easy sharing
 
 ## Installation
 
@@ -24,11 +25,32 @@ A command-line tool written in Rust to analyze GitHub repositories and generate 
 git clone https://github.com/yourusername/repo-analyzer.git
 cd repo-analyzer
 
+# Configure AWS credentials
+cp config.json.example config.json
+# Edit config.json with your AWS credentials
+
 # Build the project
 cargo build --release
 
 # The binary will be available at target/release/repo-analyzer
 ```
+
+### AWS Configuration
+
+The tool requires AWS credentials to upload reports to S3. Create a `config.json` file in the project root with the following structure:
+
+```json
+{
+  "aws": {
+    "access_key": "YOUR_ACCESS_KEY",
+    "secret_key": "YOUR_SECRET_KEY",
+    "region": "us-east-1",
+    "bucket": "repo-analyzer"
+  }
+}
+```
+
+Replace the placeholder values with your actual AWS credentials.
 
 ## Usage
 
@@ -36,7 +58,7 @@ cargo build --release
 # Basic usage
 repo-analyzer --repo-path /path/to/repository
 
-# Specify output format
+# Specify output format (default is HTML)
 repo-analyzer --repo-path /path/to/repository --output-format json
 
 # Show detailed history
@@ -44,14 +66,25 @@ repo-analyzer --repo-path /path/to/repository --detailed-history
 
 # Show more contributors
 repo-analyzer --repo-path /path/to/repository --top-contributors 10
+
+# Analyze a remote repository
+repo-analyzer --remote-url https://github.com/username/repository
 ```
 
 ### Command-line Options
 
-- `--repo-path, -r`: Path to the repository to analyze (required)
-- `--output-format, -o`: Output format (text, json, html) (default: text)
+- `--repo-path, -r`: Path to the repository to analyze (required unless --remote-url is provided)
+- `--remote-url, -u`: URL of a remote repository to clone and analyze
+- `--output-format, -o`: Output format (text, json, html) (default: html)
 - `--detailed-history, -d`: Include detailed commit history (default: false)
 - `--top-contributors, -t`: Number of top contributors to show (default: 5)
+- `--history-depth`: Depth of commit history to analyze (0 for all) (default: 0)
+
+## Report Access
+
+After analyzing a repository, the tool automatically uploads the report to cloud storage and provides a URL where you can access the report. This URL is displayed in the console output after the analysis is complete.
+
+The report URL is permanent and can be shared with others to provide access to the repository analysis.
 
 ## Example Output
 

@@ -14,7 +14,7 @@ pub struct Cli {
     pub repo_path: Option<PathBuf>,
 
     /// Output format (text, json, html)
-    #[arg(short, long, default_value = "text")]
+    #[arg(short, long, default_value = "html")]
     pub output_format: String,
 
     /// Include detailed commit history
