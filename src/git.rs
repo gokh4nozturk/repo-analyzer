@@ -1,9 +1,9 @@
 use anyhow::{Context, Result};
 use chrono::{DateTime, Local, TimeZone};
 use git2::{build::RepoBuilder, FetchOptions, RemoteCallbacks, Repository, Time};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone)]
 pub struct Contributor {
@@ -12,6 +12,20 @@ pub struct Contributor {
     pub commit_count: usize,
     pub first_commit: String,
     pub last_commit: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct FileStats {
+    pub commit_count: usize,
+    pub first_commit_date: String,
+    pub last_commit_date: String,
+    pub authors: Vec<String>,
+    pub lines_added: usize,
+    pub lines_removed: usize,
+    pub change_frequency: f64,                        // Changes per month
+    pub author_contributions: HashMap<String, usize>, // Author -> commit count
+    pub last_modified_by: String,
+    pub avg_changes_per_commit: f64,
 }
 
 pub fn clone_repository(url: &str, target_path: &Path) -> Result<Repository> {
@@ -53,11 +67,21 @@ pub fn analyze_git_repo(
     repo_path: &Path,
     depth: usize,
 ) -> Result<(usize, Vec<Contributor>, String)> {
+    let (commit_count, contributors, last_activity, _) =
+        analyze_git_repo_extended(repo_path, depth)?;
+    Ok((commit_count, contributors, last_activity))
+}
+
+pub fn analyze_git_repo_extended(
+    repo_path: &Path,
+    depth: usize,
+) -> Result<(usize, Vec<Contributor>, String, HashMap<PathBuf, FileStats>)> {
     let repo = Repository::open(repo_path).context("Failed to open git repository")?;
 
     let mut commit_count = 0;
     let mut contributors_map: HashMap<String, Contributor> = HashMap::new();
     let mut last_commit_time = None;
+    let mut file_stats: HashMap<PathBuf, FileStats> = HashMap::new();
 
     // Get the HEAD reference
     let head = repo.head().context("Failed to get HEAD reference")?;
@@ -117,6 +141,116 @@ pub fn analyze_git_repo(
                 first_commit: datetime.clone(),
                 last_commit: datetime.clone(),
             });
+
+        // Get file changes in this commit
+        if let Ok(parent) = commit.parent(0) {
+            let diff = repo
+                .diff_tree_to_tree(
+                    Some(&parent.tree().unwrap()),
+                    Some(&commit.tree().unwrap()),
+                    None,
+                )
+                .unwrap();
+
+            let mut lines_added_map: HashMap<PathBuf, usize> = HashMap::new();
+            let mut lines_removed_map: HashMap<PathBuf, usize> = HashMap::new();
+            let mut files_changed: HashSet<PathBuf> = HashSet::new();
+
+            diff.foreach(
+                &mut |delta, _| {
+                    if let Some(path) = delta.new_file().path() {
+                        files_changed.insert(repo_path.join(path));
+                    }
+                    true
+                },
+                None,
+                Some(&mut |delta, hunk| {
+                    if let Some(path) = delta.new_file().path() {
+                        let path_buf = repo_path.join(path);
+                        *lines_added_map.entry(path_buf.clone()).or_insert(0) +=
+                            hunk.new_lines() as usize;
+                        *lines_removed_map.entry(path_buf).or_insert(0) +=
+                            hunk.old_lines() as usize;
+                    }
+                    true
+                }),
+                None,
+            )
+            .unwrap();
+
+            // Now update file_stats with the collected information
+            for path in files_changed {
+                let author_name = author.name().unwrap_or("Unknown").to_string();
+                let added = lines_added_map.get(&path).cloned().unwrap_or(0);
+                let removed = lines_removed_map.get(&path).cloned().unwrap_or(0);
+
+                // Check if we already have stats for this file
+                if let Some(stats) = file_stats.get_mut(&path) {
+                    // Update existing stats
+                    stats.commit_count += 1;
+                    stats.last_commit_date = datetime.clone();
+                    stats.last_modified_by = author_name.clone();
+                    stats.lines_added += added;
+                    stats.lines_removed += removed;
+
+                    // Update author contributions
+                    *stats
+                        .author_contributions
+                        .entry(author_name.clone())
+                        .or_insert(0) += 1;
+
+                    if !stats.authors.contains(&author_name) {
+                        stats.authors.push(author_name);
+                    }
+                } else {
+                    // Create new stats
+                    let mut authors = Vec::new();
+                    authors.push(author_name.clone());
+
+                    let mut author_contributions = HashMap::new();
+                    author_contributions.insert(author_name.clone(), 1);
+
+                    let new_stats = FileStats {
+                        commit_count: 1,
+                        first_commit_date: datetime.clone(),
+                        last_commit_date: datetime.clone(),
+                        authors,
+                        lines_added: added,
+                        lines_removed: removed,
+                        change_frequency: 0.0,
+                        author_contributions,
+                        last_modified_by: author_name,
+                        avg_changes_per_commit: 0.0,
+                    };
+
+                    file_stats.insert(path, new_stats);
+                }
+            }
+        }
+    }
+
+    // Calculate additional statistics for each file
+    for stats in file_stats.values_mut() {
+        // Calculate change frequency (changes per month)
+        if let (Ok(first_date), Ok(last_date)) = (
+            chrono::DateTime::parse_from_str(&stats.first_commit_date, "%Y-%m-%d %H:%M:%S %z"),
+            chrono::DateTime::parse_from_str(&stats.last_commit_date, "%Y-%m-%d %H:%M:%S %z"),
+        ) {
+            let duration = last_date.signed_duration_since(first_date);
+            let months = (duration.num_days() as f64) / 30.0;
+
+            if months > 0.0 {
+                stats.change_frequency = stats.commit_count as f64 / months;
+            } else {
+                stats.change_frequency = stats.commit_count as f64; // All changes in less than a month
+            }
+        }
+
+        // Calculate average changes per commit
+        let total_changes = stats.lines_added + stats.lines_removed;
+        if stats.commit_count > 0 {
+            stats.avg_changes_per_commit = total_changes as f64 / stats.commit_count as f64;
+        }
     }
 
     // Sort contributors by commit count
@@ -131,7 +265,7 @@ pub fn analyze_git_repo(
         "Unknown".to_string()
     };
 
-    Ok((commit_count, contributors, last_activity))
+    Ok((commit_count, contributors, last_activity, file_stats))
 }
 
 fn format_git_time(time: &Time) -> String {
