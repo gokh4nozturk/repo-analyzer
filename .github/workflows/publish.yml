@@ -12,21 +12,39 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
+          components: clippy, rustfmt
 
       - name: Build and test
         run: |
           cargo build --release
           cargo test --release
 
+      - name: Check if package exists on crates.io
+        id: check_exists
+        run: |
+          VERSION=$(grep -m 1 "version" Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://crates.io/api/v1/crates/repo-analyzer/$VERSION)
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "Package repo-analyzer version $VERSION already exists on crates.io"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Package repo-analyzer version $VERSION does not exist on crates.io"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Publish to crates.io
+        if: steps.check_exists.outputs.exists != 'true'
         uses: katyo/publish-crates@v2
         with:
           registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
           args: --no-verify
+
+      - name: Mark as published
+        if: steps.check_exists.outputs.exists == 'true'
+        run: echo "Package already published, skipping publication"
