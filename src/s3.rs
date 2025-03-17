@@ -5,10 +5,10 @@ use std::path::Path;
 /// Uploads a file to cloud storage and returns the public URL
 pub async fn upload_to_s3(
     file_path: &Path,
-    bucket_name: &str,
-    key: &str,
-    region: &str,
-    use_api: bool,
+    _bucket_name: &str,
+    _key: &str,
+    _region: &str,
+    _use_api: bool,
 ) -> Result<String> {
     println!("Starting upload process...");
     println!("File: {}", file_path.display());
