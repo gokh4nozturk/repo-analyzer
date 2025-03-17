@@ -1,6 +1,6 @@
 # Repository Analyzer
 
-A command-line tool written in Rust to analyze GitHub repositories and generate comprehensive reports with automatic S3 upload capability.
+A command-line tool written in Rust to analyze GitHub repositories and generate comprehensive reports with automatic cloud storage upload capability.
 
 ## Features
 
@@ -9,7 +9,7 @@ A command-line tool written in Rust to analyze GitHub repositories and generate 
 - Track commit history and contributor statistics
 - Generate reports in multiple formats (text, JSON, HTML)
 - Identify file extensions and their distribution
-- Automatically upload reports to S3 for easy sharing and access
+- Automatically upload reports to cloud storage (S3 or R2) for easy sharing and access
 - Analyze code complexity and identify potential issues
 
 ## Installation
@@ -24,7 +24,7 @@ cargo install repo-analyzer
 
 - Rust and Cargo (1.70.0 or newer)
 - Git (for repository analysis)
-- AWS account with S3 access (for report uploading)
+- AWS account with S3 access (for direct S3 upload) or use our API service (no credentials needed)
 
 ### Building from Source
 

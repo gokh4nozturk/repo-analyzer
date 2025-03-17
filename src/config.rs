@@ -6,19 +6,10 @@ use std::path::Path;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
-    pub aws: AwsConfig,
     #[serde(default)]
     pub api_key: Option<String>,
     #[serde(default)]
     pub api_url: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct AwsConfig {
-    pub access_key: String,
-    pub secret_key: String,
-    pub region: String,
-    pub bucket: String,
 }
 
 impl Config {
@@ -37,15 +28,6 @@ impl Config {
 
         // If config.json doesn't exist, use default values
         Ok(Config {
-            aws: AwsConfig {
-                access_key: std::env::var("AWS_ACCESS_KEY_ID")
-                    .unwrap_or_else(|_| "YOUR_ACCESS_KEY".to_string()),
-                secret_key: std::env::var("AWS_SECRET_ACCESS_KEY")
-                    .unwrap_or_else(|_| "YOUR_SECRET_KEY".to_string()),
-                region: std::env::var("AWS_REGION").unwrap_or_else(|_| "us-east-1".to_string()),
-                bucket: std::env::var("AWS_S3_BUCKET")
-                    .unwrap_or_else(|_| "repo-analyzer".to_string()),
-            },
             api_key: std::env::var("REPO_ANALYZER_API_KEY").ok(),
             api_url: std::env::var("REPO_ANALYZER_API_URL").ok(),
         })

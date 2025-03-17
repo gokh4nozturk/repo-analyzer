@@ -17,6 +17,10 @@ pub struct Cli {
     #[arg(short, long, default_value = "html")]
     pub output_format: String,
 
+    /// Output file path
+    #[arg(short, long)]
+    pub output: Option<String>,
+
     /// Include detailed commit history
     #[arg(short, long, default_value = "false")]
     pub detailed_history: bool,
@@ -33,7 +37,7 @@ pub struct Cli {
     #[arg(long, default_value = "0")]
     pub history_depth: usize,
 
-    /// Upload reports to S3 (requires AWS credentials)
-    #[arg(long, default_value = "false")]
-    pub upload_to_s3: bool,
+    /// Upload report to cloud storage
+    #[arg(short = 'U', long)]
+    pub upload: bool,
 }

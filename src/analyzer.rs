@@ -52,11 +52,12 @@ pub struct DuplicateCode {
 }
 
 pub fn analyze_repository(repo_path: &Path, history_depth: usize) -> Result<RepositoryAnalysis> {
-    let repo_path = repo_path.to_path_buf();
+    println!("Starting repository analysis...");
+    println!("Repository path: {}", repo_path.display());
 
-    // Initialize analysis structure
+    // Create analysis structure
     let mut analysis = RepositoryAnalysis {
-        repo_path: repo_path.clone(),
+        repo_path: repo_path.to_path_buf(),
         file_count: 0,
         language_stats: HashMap::new(),
         total_lines: 0,
@@ -87,27 +88,18 @@ pub fn analyze_repository(repo_path: &Path, history_depth: usize) -> Result<Repo
     };
 
     // Analyze files
-    analyze_files(&repo_path, &mut analysis)?;
+    analyze_files(repo_path, &mut analysis)?;
 
     // Analyze git history
-    analyze_git_history(&repo_path, &mut analysis, history_depth)?;
-
-    // Calculate average file size
-    if analysis.file_count > 0 {
-        let total_size: usize = analysis.largest_files.iter().map(|(_, size)| size).sum();
-        analysis.avg_file_size = total_size as f64 / analysis.file_count as f64;
-    }
-
-    // Keep only top 10 largest files
-    analysis.largest_files.sort_by(|(_, a), (_, b)| b.cmp(a));
-    analysis.largest_files.truncate(10);
+    analyze_git_history(repo_path, &mut analysis, history_depth)?;
 
     // Analyze code complexity
-    analyze_code_complexity(&repo_path, &mut analysis)?;
+    analyze_code_complexity(repo_path, &mut analysis)?;
 
     // Find duplicate code
-    find_duplicate_code(&repo_path, &mut analysis)?;
+    find_duplicate_code(repo_path, &mut analysis)?;
 
+    println!("Analysis complete!");
     Ok(analysis)
 }
 

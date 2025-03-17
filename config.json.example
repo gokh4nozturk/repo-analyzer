@@ -1,10 +1,4 @@
 {
-  "aws": {
-    "access_key": "YOUR_ACCESS_KEY",
-    "secret_key": "YOUR_SECRET_KEY",
-    "region": "eu-central-1",
-    "bucket": "repo-analyzer"
-  },
   "api_key": "YOUR_API_KEY",
-  "api_url": "https://api.repo-analyzer.com/upload"
+  "api_url": "https://api.analyzer.gokhanozturk.io/api/upload"
 } 
