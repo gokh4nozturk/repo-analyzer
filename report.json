@@ -1,54 +1,54 @@
 {
   "repo_path": ".",
-  "file_count": 31,
+  "file_count": 32,
   "language_stats": [
     {
-      "language": "Other",
-      "count": 4,
-      "percentage": 12.903225806451612
+      "language": "YAML",
+      "count": 2,
+      "percentage": 6.25
     },
     {
       "language": "JavaScript",
       "count": 1,
-      "percentage": 3.225806451612903
-    },
-    {
-      "language": "TOML",
-      "count": 3,
-      "percentage": 9.67741935483871
+      "percentage": 3.125
     },
     {
       "language": "Rust",
       "count": 9,
-      "percentage": 29.03225806451613
-    },
-    {
-      "language": "YAML",
-      "count": 2,
-      "percentage": 6.451612903225806
+      "percentage": 28.125
     },
     {
       "language": "JSON",
+      "count": 4,
+      "percentage": 12.5
+    },
+    {
+      "language": "TOML",
       "count": 3,
-      "percentage": 9.67741935483871
+      "percentage": 9.375
     },
     {
       "language": "Markdown",
       "count": 3,
-      "percentage": 9.67741935483871
+      "percentage": 9.375
+    },
+    {
+      "language": "Other",
+      "count": 4,
+      "percentage": 12.5
     }
   ],
-  "total_lines": 6677,
-  "code_lines": 5819,
+  "total_lines": 7252,
+  "code_lines": 6394,
   "comment_lines": 156,
   "blank_lines": 702,
-  "commit_count": 18,
+  "commit_count": 19,
   "contributors": [
     {
       "name": "Example User",
       "email": "example@example.com",
-      "commit_count": 17,
-      "first_commit": "2025-03-17 12:35:46",
+      "commit_count": 18,
+      "first_commit": "2025-03-17 12:38:18",
       "last_commit": "2025-03-16 23:34:24"
     },
     {
@@ -59,47 +59,47 @@
       "last_commit": "2025-03-16 23:45:30"
     }
   ],
-  "last_activity": "2025-03-17 12:35:46",
+  "last_activity": "2025-03-17 12:38:18",
   "file_extensions": [
     {
-      "extension": "toml",
-      "count": 3,
-      "percentage": 9.67741935483871
-    },
-    {
-      "extension": "rs",
-      "count": 9,
-      "percentage": 29.03225806451613
+      "extension": "lock",
+      "count": 2,
+      "percentage": 6.25
     },
     {
       "extension": "example",
       "count": 2,
-      "percentage": 6.451612903225806
+      "percentage": 6.25
     },
     {
-      "extension": "lock",
-      "count": 2,
-      "percentage": 6.451612903225806
-    },
-    {
-      "extension": "js",
-      "count": 1,
-      "percentage": 3.225806451612903
+      "extension": "toml",
+      "count": 3,
+      "percentage": 9.375
     },
     {
       "extension": "md",
       "count": 3,
-      "percentage": 9.67741935483871
-    },
-    {
-      "extension": "json",
-      "count": 3,
-      "percentage": 9.67741935483871
+      "percentage": 9.375
     },
     {
       "extension": "yml",
       "count": 2,
-      "percentage": 6.451612903225806
+      "percentage": 6.25
+    },
+    {
+      "extension": "rs",
+      "count": 9,
+      "percentage": 28.125
+    },
+    {
+      "extension": "json",
+      "count": 4,
+      "percentage": 12.5
+    },
+    {
+      "extension": "js",
+      "count": 1,
+      "percentage": 3.125
     }
   ],
   "avg_file_size": 0.0,
@@ -113,6 +113,11 @@
       "path": "./PUBLISHING.md",
       "size_bytes": 2601,
       "size_human": "2.54 KB"
+    },
+    {
+      "path": "./report.json",
+      "size_bytes": 12971,
+      "size_human": "12.67 KB"
     },
     {
       "path": "./LICENSE",
@@ -191,8 +196,8 @@
     },
     {
       "path": "./repo-analyzer-api/wrangler.toml",
-      "size_bytes": 762,
-      "size_human": "0.74 KB"
+      "size_bytes": 820,
+      "size_human": "0.80 KB"
     },
     {
       "path": "./repo-analyzer-api/src/worker.js",
@@ -343,27 +348,27 @@
   "file_age_stats": {
     "newest_files": [
       {
-        "path": "./src/analyzer.rs",
-        "date": "2025-03-17 12:35:46"
-      },
-      {
-        "path": "./src/cli.rs",
-        "date": "2025-03-17 12:35:46"
-      },
-      {
-        "path": "./Cargo.toml",
-        "date": "2025-03-17 12:35:46"
-      },
-      {
-        "path": "./Cargo.lock",
-        "date": "2025-03-17 12:35:46"
-      },
-      {
-        "path": "./README.md",
-        "date": "2025-03-17 12:35:46"
+        "path": "./report.json",
+        "date": "2025-03-17 12:38:18"
       },
       {
         "path": "./src/s3.rs",
+        "date": "2025-03-17 12:38:18"
+      },
+      {
+        "path": "./src/main.rs",
+        "date": "2025-03-17 12:38:18"
+      },
+      {
+        "path": "./src/lib.rs",
+        "date": "2025-03-17 12:38:18"
+      },
+      {
+        "path": "./src/cli.rs",
+        "date": "2025-03-17 12:38:18"
+      },
+      {
+        "path": "./Cargo.lock",
         "date": "2025-03-17 12:35:46"
       },
       {
@@ -375,12 +380,12 @@
         "date": "2025-03-17 12:35:46"
       },
       {
-        "path": "./src/config.rs",
+        "path": "./src/analyzer.rs",
         "date": "2025-03-17 12:35:46"
       },
       {
-        "path": "./report.json",
-        "date": "2025-03-17 11:59:16"
+        "path": "./README.md",
+        "date": "2025-03-17 12:35:46"
       }
     ],
     "oldest_files": [
@@ -413,21 +418,21 @@
         "date": "2025-03-17 00:53:38"
       },
       {
-        "path": "./.gitmodules",
+        "path": "./api/.env.example",
         "date": "2025-03-17 02:20:48"
       },
       {
-        "path": "./api/package.json",
+        "path": "./api/Dockerfile",
         "date": "2025-03-17 02:20:48"
       },
       {
-        "path": "./api/index.js",
+        "path": "./api/docker-compose.yml",
         "date": "2025-03-17 02:20:48"
       }
     ],
     "most_modified_files": [
       {
-        "path": "./Cargo.toml",
+        "path": "./src/main.rs",
         "modification_count": 6
       },
       {
@@ -435,50 +440,40 @@
         "modification_count": 6
       },
       {
+        "path": "./Cargo.toml",
+        "modification_count": 6
+      },
+      {
         "path": "./Cargo.lock",
         "modification_count": 5
       },
       {
-        "path": "./src/main.rs",
+        "path": "./src/s3.rs",
         "modification_count": 5
       },
       {
         "path": "./src/cli.rs",
-        "modification_count": 4
-      },
-      {
-        "path": "./src/s3.rs",
-        "modification_count": 4
+        "modification_count": 5
       },
       {
         "path": "./repo-analyzer-api",
         "modification_count": 4
       },
       {
+        "path": "./report.json",
+        "modification_count": 3
+      },
+      {
+        "path": "./config.json.example",
+        "modification_count": 3
+      },
+      {
         "path": "./src/analyzer.rs",
-        "modification_count": 3
-      },
-      {
-        "path": "./.github/workflows/publish.yml",
-        "modification_count": 3
-      },
-      {
-        "path": "./report.html",
         "modification_count": 3
       }
     ]
   },
   "most_changed_files": [
-    {
-      "path": "./src/analyzer.rs",
-      "commit_count": 3,
-      "lines_added": 837,
-      "lines_removed": 173,
-      "change_frequency": 0.0,
-      "top_contributor": "Example User",
-      "last_modified": "2025-03-16 23:44:58",
-      "avg_changes_per_commit": 336.6666666666667
-    },
     {
       "path": "./PUBLISHING.md",
       "commit_count": 2,
@@ -488,46 +483,6 @@
       "top_contributor": "Example User",
       "last_modified": "2025-03-17 00:37:35",
       "avg_changes_per_commit": 116.0
-    },
-    {
-      "path": "./.gitmodules",
-      "commit_count": 1,
-      "lines_added": 3,
-      "lines_removed": 0,
-      "change_frequency": 0.0,
-      "top_contributor": "Example User",
-      "last_modified": "2025-03-17 02:20:48",
-      "avg_changes_per_commit": 3.0
-    },
-    {
-      "path": "./src/cli.rs",
-      "commit_count": 4,
-      "lines_added": 52,
-      "lines_removed": 36,
-      "change_frequency": 0.0,
-      "top_contributor": "Example User",
-      "last_modified": "2025-03-16 23:44:58",
-      "avg_changes_per_commit": 22.0
-    },
-    {
-      "path": "./Cargo.toml",
-      "commit_count": 6,
-      "lines_added": 53,
-      "lines_removed": 40,
-      "change_frequency": 0.0,
-      "top_contributor": "Example User",
-      "last_modified": "2025-03-16 23:44:58",
-      "avg_changes_per_commit": 15.5
-    },
-    {
-      "path": "./api/package.json",
-      "commit_count": 2,
-      "lines_added": 24,
-      "lines_removed": 24,
-      "change_frequency": 0.0,
-      "top_contributor": "Example User",
-      "last_modified": "2025-03-17 01:35:54",
-      "avg_changes_per_commit": 24.0
     },
     {
       "path": "./Cargo.lock",
@@ -540,34 +495,84 @@
       "avg_changes_per_commit": 570.0
     },
     {
-      "path": "./README.md",
-      "commit_count": 6,
-      "lines_added": 248,
-      "lines_removed": 140,
-      "change_frequency": 0.0,
-      "top_contributor": "Example User",
-      "last_modified": "2025-03-17 00:32:52",
-      "avg_changes_per_commit": 64.66666666666667
-    },
-    {
       "path": "./report.json",
-      "commit_count": 2,
-      "lines_added": 80,
+      "commit_count": 3,
+      "lines_added": 653,
       "lines_removed": 80,
       "change_frequency": 0.0,
       "top_contributor": "Example User",
       "last_modified": "2025-03-16 23:44:58",
-      "avg_changes_per_commit": 80.0
+      "avg_changes_per_commit": 244.33333333333334
     },
     {
-      "path": "./src/git.rs",
+      "path": "./src/s3.rs",
+      "commit_count": 5,
+      "lines_added": 300,
+      "lines_removed": 219,
+      "change_frequency": 0.0,
+      "top_contributor": "Example User",
+      "last_modified": "2025-03-17 00:32:52",
+      "avg_changes_per_commit": 103.8
+    },
+    {
+      "path": "./repo-analyzer-api",
+      "commit_count": 4,
+      "lines_added": 4,
+      "lines_removed": 3,
+      "change_frequency": 0.0,
+      "top_contributor": "Example User",
+      "last_modified": "2025-03-17 02:20:48",
+      "avg_changes_per_commit": 1.75
+    },
+    {
+      "path": "./api/.env.example",
       "commit_count": 2,
-      "lines_added": 239,
-      "lines_removed": 61,
+      "lines_added": 11,
+      "lines_removed": 11,
+      "change_frequency": 0.0,
+      "top_contributor": "Example User",
+      "last_modified": "2025-03-17 01:35:54",
+      "avg_changes_per_commit": 11.0
+    },
+    {
+      "path": "./config.json.example",
+      "commit_count": 3,
+      "lines_added": 21,
+      "lines_removed": 17,
+      "change_frequency": 0.0,
+      "top_contributor": "Example User",
+      "last_modified": "2025-03-17 00:32:52",
+      "avg_changes_per_commit": 12.666666666666666
+    },
+    {
+      "path": "./src/analyzer.rs",
+      "commit_count": 3,
+      "lines_added": 837,
+      "lines_removed": 173,
       "change_frequency": 0.0,
       "top_contributor": "Example User",
       "last_modified": "2025-03-16 23:44:58",
-      "avg_changes_per_commit": 150.0
+      "avg_changes_per_commit": 336.6666666666667
+    },
+    {
+      "path": "./api/Dockerfile",
+      "commit_count": 2,
+      "lines_added": 19,
+      "lines_removed": 19,
+      "change_frequency": 0.0,
+      "top_contributor": "Example User",
+      "last_modified": "2025-03-17 01:35:54",
+      "avg_changes_per_commit": 19.0
+    },
+    {
+      "path": "./.github/workflows/rust.yml",
+      "commit_count": 1,
+      "lines_added": 22,
+      "lines_removed": 0,
+      "change_frequency": 0.0,
+      "top_contributor": "gokh4nozturk",
+      "last_modified": "2025-03-16 23:45:30",
+      "avg_changes_per_commit": 22.0
     }
   ]
 }
